@@ -10,7 +10,10 @@ output:
 #link-citations: true
 ---
 
-
+```{r, echo=FALSE, cache=FALSE}
+evaluate <- TRUE
+cache.me <- FALSE
+```
 
 ## Introduction
 ```{r child = 'sections/intro.Rmd', eval=TRUE}

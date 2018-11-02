@@ -2,6 +2,10 @@
 title: "intro"
 output: html_document
 ---
+```{r echo=FALSE}
+knitr::opts_chunk$set(eval=evaluate, cache=cache.me)
+```
+
 dependencies:
 ```{r load_packages, message=FALSE}
 library(dplyr)

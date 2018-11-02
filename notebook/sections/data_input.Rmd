@@ -2,6 +2,10 @@
 title: "data_input"
 output: html_document
 ---
+```{r echo=FALSE}
+knitr::opts_chunk$set(eval=evaluate, cache=cache.me)
+```
+
 creates a directory unless it laready exists:
 ```{r}
 project.dir <- rprojroot::find_rstudio_root_file()

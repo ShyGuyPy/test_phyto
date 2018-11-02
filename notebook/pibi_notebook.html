@@ -227,7 +227,130 @@ div.tocify {
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>testing testing</p>
+<p>dependencies:</p>
+<pre class="r"><code>library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(purrr)
+library(stringr)
+library(leaflet)
+library(lubridate)
+library(readxl)
+library(httr)
+library(RCurl)
+library(data.table)
+library(jsonlite)
+library(rprojroot)
+library(ritis)</code></pre>
+<p>we want to keep adding components until we can reproduce the file generation issue found in phyto. Elt’s start witht the componenets we understand the best:</p>
+<pre class="r"><code>project.dir &lt;- rprojroot::find_rstudio_root_file()</code></pre>
+<pre class="r"><code>clean_string &lt;- function(x) {
+  x %&gt;% 
+    stringr::str_trim() %&gt;% 
+    tolower() %&gt;% 
+    stringr::str_replace_all(&quot;\\s+&quot;, &quot; &quot;) %&gt;% 
+    stringr::str_replace_all(&quot; &quot;, &quot;_&quot;) %&gt;%  
+    if_else(. == &quot;&quot;, as.character(NA), .)
+}</code></pre>
+<pre class="r"><code>clean_up &lt;- function(x) {
+  x %&gt;% 
+    rename_all(clean_string) %&gt;% 
+    mutate_if(is.character, funs(clean_string))%&gt;% 
+    distinct()
+}</code></pre>
+</div>
+<div id="data-input" class="section level2">
+<h2>Data Input</h2>
+<p>creates a directory unless it laready exists:</p>
+<pre class="r"><code>project.dir &lt;- rprojroot::find_rstudio_root_file()
+
+dir.create(file.path(project.dir, &quot;data/phytoplankton2/&quot;),
+           recursive = TRUE, showWarnings = TRUE)</code></pre>
+<p>gets data from Va_phyto… excel file:</p>
+<pre class="r"><code>phyto.df &lt;- readxl::read_excel(file.path(project.dir, &quot;data/Va_phyto_count_and_event/data-dev_2013_2016_ODU_Phyto_Reported_Data_05mar18.xlsx&quot;))
+
+phyto.df &lt;- clean_up(phyto.df)</code></pre>
+<pre class="r"><code>phyto.df &lt;- phyto.df %&gt;% 
+  filter(layer %in% c(&quot;ap&quot;, &quot;wc&quot;),
+         !is.na(reportingvalue)) %&gt;% 
+  mutate(sampledate = as.Date(sampledate))</code></pre>
+<pre class="r"><code>phyto.df &lt;- phyto.df %&gt;% 
+  mutate(
+    tsn = as.integer(tsn),
+    org_tsn = case_when(
+      latinname == &quot;navicula_notablis&quot; ~ as.integer(4327),
+      latinname == &quot;pleurosigma_macrum&quot; ~ as.integer(4650),
+      latinname == &quot;pleurosigma_obscurum&quot; ~ as.integer(591383),
+      latinname == &quot;polykrikos_hartmannii&quot; ~ as.integer(331299),
+      latinname == &quot;protoperidinium_aciculiderum&quot; ~ as.integer(10329),
+      latinname == &quot;protoperidinium_paulseni&quot; ~ as.integer(3568),
+      latinname == &quot;scrippsiella_favionese&quot; ~ as.integer(10537),
+      latinname == &quot;tetrastrum_caudatum&quot; ~ as.integer(5691),
+      latinname == &quot;didymocystis&quot; ~ as.integer(5810),
+      latinname == &quot;lauterborniella_elegantissima&quot; ~ as.integer(6097),
+      latinname == &quot;characium_sp.&quot; ~ as.integer(5756),
+      latinname == &quot;cylindrospermopsis_sp.&quot; ~ as.integer(203689),
+      latinname == &quot;chaetoceros_neogracilis&quot; ~ as.integer(1004011),
+      latinname == &quot;navicula_retusa_cancellata&quot; ~ as.integer(1020372),
+      latinname == &quot;karlodinium_micrum&quot; ~ as.integer(180904),
+      latinname == &quot;lagerheimia&quot; ~ as.integer(6017),
+      latinname == &quot;quadricoccus_euryhalinicus&quot; ~ as.integer(957939),
+      latinname == &quot;scrippsiella_precaria&quot; ~ as.integer(10536),
+      latinname == &quot;psuedosolenia_calcar-avis&quot; ~ as.integer(970064),
+      latinname == &quot;centronella&quot; ~ as.integer(970064),
+      latinname == &quot;amphidinium_tatrae&quot; ~ as.integer(9997),
+      latinname == &quot;navicula_lata&quot; ~ as.integer(4450),
+      latinname == &quot;nitzschia_vitrea_recta&quot; ~ as.integer(5204),
+      latinname == &quot;rhaphoneis_gemmifera&quot; ~ as.integer(3145),
+      latinname == &quot;delphineis_surirella&quot; ~ as.integer(969978),
+      latinname == &quot;navicula_annulata&quot; ~ as.integer(3649),
+      latinname == &quot;proboscia_alata_gracillima&quot; ~ as.integer(610099),
+      latinname == &quot;guinardia_striata&quot; ~ as.integer(2921),
+      latinname == &quot;guinardia_cylindrus&quot; ~ as.integer(2921),
+      latinname == &quot;aphanizomenon_issatschenkoi&quot; ~ as.integer(1191),
+      latinname == &quot;helicotheca_tamesis&quot; ~ as.integer(590815),
+      latinname == &quot;corethron_valdivae&quot; ~ as.integer(2386),
+      latinname == &quot;gonyaulax_conjuncta&quot; ~ as.integer(10359),
+      latinname == &quot;lioloma_delicatulum&quot; ~ as.integer(573597),
+      latinname == &quot;syracosphaera_histrica&quot; ~ as.integer(2234),
+      latinname == &quot;rhizosolenia_formosa&quot; ~ as.integer(2879),
+      latinname == &quot;proboscla_alata_curvirostris&quot; ~ as.integer(610099),
+      latinname == &quot;membraneis_challengeri&quot; ~ as.integer(3648),
+      latinname == &quot;chrysococcus_tesselatus&quot; ~ as.integer(1751),
+      latinname == &quot;rhoicosphenia_abbreviata&quot; ~ as.integer(3633),
+      latinname == &quot;protoperidinium_aciculiferum&quot; ~ as.integer(10340),
+      latinname == &quot;protoperidinium_fimbriatum&quot; ~ as.integer(10340),
+      latinname == &quot;licmophora_inflata&quot; ~ as.integer(3155),
+      latinname == &quot;biddulphia_reticulata&quot; ~ as.integer(2678),
+      latinname == &quot;caloneis_lepidula&quot; ~ as.integer(4369),
+      latinname == &quot;caloneis_trinodis&quot; ~ as.integer(4369),
+      latinname == &quot;amphiprora_cholnokyi&quot; ~ as.integer(4674),
+      latinname == &quot;navicula_interrupta&quot; ~ as.integer(3649),
+      latinname == &quot;cerataulus_radiatus&quot; ~ as.integer(2709),
+      latinname == &quot;gyrosigma_balticum_silimis&quot; ~ as.integer(4623),
+      latinname == &quot;dictyocha_siderea&quot; ~ as.integer(1804),
+      latinname == &quot;odontella_alternans&quot; ~ as.integer(573604),
+      latinname == &quot;nitzschia_vitrea_salinarum&quot; ~ as.integer(5204),
+      latinname == &quot;proboscla_alata_indica&quot; ~ as.integer(610099),
+      latinname == &quot;attheya_decora&quot; ~ as.integer(2876),
+      latinname == &quot;synedra_closterioides&quot; ~ as.integer(970065),
+      latinname == &quot;trinacria_regina&quot; ~ as.integer(2747),
+      latinname == &quot;chattonella&quot; ~ as.integer(969917),
+      latinname == &quot;chattonella_subsalsa&quot; ~ as.integer(969917),
+      latinname == &quot;heterosigma_akashiwo&quot; ~ as.integer(969917),
+      latinname == &quot;vibrio_fisheri&quot; ~ as.integer(959178),
+      TRUE ~ as.integer(tsn)
+    )
+  )</code></pre>
+<pre class="r"><code>dir.create(file.path(project.dir, &quot;data/phytoplankton2/&quot;),
+           recursive = TRUE, showWarnings = TRUE)</code></pre>
+<pre><code>## Warning in dir.create(file.path(project.dir, &quot;data/phytoplankton2/&quot;),
+## recursive = TRUE, : '/Users/lukevawter/Desktop/R/test_phyto/data/
+## phytoplankton2' already exists</code></pre>
+<pre class="r"><code>phyto.df %&gt;% 
+  mutate(reportingvalue = as.character(reportingvalue)) %&gt;% 
+data.table::fwrite(file.path(project.dir, &quot;data/phytoplankton2/&quot;, &quot;VA_ODU_phyto_taxa.csv&quot;))
+#&quot;cedr_phyto_taxa.csv&quot;</code></pre>
 </div>
 
 

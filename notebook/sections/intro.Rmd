@@ -2,6 +2,24 @@
 title: "intro"
 output: html_document
 ---
+dependencies:
+```{r load_packages, message=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(purrr)
+library(stringr)
+library(leaflet)
+library(lubridate)
+library(readxl)
+library(httr)
+library(RCurl)
+library(data.table)
+library(jsonlite)
+library(rprojroot)
+library(ritis)
+```
+
 
 we want to keep adding components until we can reproduce the file generation issue found in phyto.  Elt's start witht the componenets we understand the best:
 

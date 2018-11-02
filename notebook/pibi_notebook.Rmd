@@ -18,7 +18,7 @@ output:
 ```
 
 ## Data Input
-```{r child= 'section/data_input.Rmd', eval=TRUE}
+```{r child= 'sections/data_input.Rmd', eval=TRUE}
 
 ```
 

@@ -1,0 +1,30 @@
+---
+title: "intro"
+output: html_document
+---
+
+we want to keep adding components until we can reproduce the file generation issue found in phyto.  Elt's start witht the componenets we understand the best:
+
+```{r}
+project.dir <- rprojroot::find_rstudio_root_file()
+```
+
+```{r}
+clean_string <- function(x) {
+  x %>% 
+    stringr::str_trim() %>% 
+    tolower() %>% 
+    stringr::str_replace_all("\\s+", " ") %>% 
+    stringr::str_replace_all(" ", "_") %>%  
+    if_else(. == "", as.character(NA), .)
+}
+```
+
+```{r}
+clean_up <- function(x) {
+  x %>% 
+    rename_all(clean_string) %>% 
+    mutate_if(is.character, funs(clean_string))%>% 
+    distinct()
+}
+```

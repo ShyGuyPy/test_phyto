@@ -1,0 +1,19 @@
+---
+title: "data_input"
+output: html_document
+---
+creates a directory unless it laready exists:
+```{r}
+project.dir <- rprojroot::find_rstudio_root_file()
+
+dir.create(file.path(project.dir, "data/phytoplankton"),
+           recursive = TRUE, showWarnings = TRUE)
+
+```
+
+gets data from Va_phyto... excel file:
+```{r}
+phyto.df <- readxl::read_excel(file.path(project.dir, "data/Va_phyto_count_and_event/data-dev_2013_2016_ODU_Phyto_Reported_Data_05mar18.xlsx"))
+
+phyto.df <- clean_up(phyto.df)
+```
